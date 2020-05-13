@@ -40,6 +40,7 @@ ContiguousArray<T>::operator=(ContiguousArray&& other) {
   owned_buffer_ = other.owned_buffer_;
   other.buffer_ = nullptr;
   other.size_ = other.capacity_ = 0;
+  return *this;
 }
 
 template <typename T>
