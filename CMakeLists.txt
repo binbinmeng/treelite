@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.16)
+cmake_minimum_required (VERSION 3.14)
 project(treelite)
 include(cmake/Utils.cmake)
 include(cmake/ExternalLibs.cmake)
@@ -94,6 +94,11 @@ target_link_libraries(objtreelite_runtime PUBLIC dmlc)
 
 # OpenMP
 if (USE_OPENMP)
+  if (APPLE)
+    # Require CMake 3.16+ on Mac OSX, as previous versions of CMake had trouble locating
+    # OpenMP on Mac. See https://github.com/dmlc/xgboost/pull/5146#issuecomment-568312706
+    cmake_minimum_required(VERSION 3.16)
+  endif (APPLE)
   find_package(OpenMP REQUIRED)
   target_link_libraries(objtreelite PUBLIC OpenMP::OpenMP_CXX)
 else (USE_OPENMP)
