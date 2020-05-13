@@ -11,12 +11,6 @@
 #include <memory>
 #include <queue>
 
-#define CHECK_EARLY_RETURN(x, msg)                           \
-  if (!(x)) {                                                \
-    LOG(FATAL) << msg;                                       \
-    return false;                                            \
-  }
-
 /* data structures with underscore prefixes are internal use only and
    do not have external linkage */
 namespace {
@@ -100,20 +94,18 @@ TreeBuilder::TreeBuilder()
   : pimpl(new TreeBuilderImpl()), ensemble_id(nullptr) {}
 TreeBuilder::~TreeBuilder() {}
 
-bool
+void
 TreeBuilder::CreateNode(int node_key) {
   auto& nodes = pimpl->tree.nodes;
-  CHECK_EARLY_RETURN(nodes.count(node_key) == 0,
-                     "CreateNode: nodes with duplicate keys are not allowed");
+  CHECK_EQ(nodes.count(node_key), 0) << "CreateNode: nodes with duplicate keys are not allowed";
   nodes[node_key].reset(new _Node());
-  return true;
 }
 
-bool
+void
 TreeBuilder::DeleteNode(int node_key) {
   auto& tree = pimpl->tree;
   auto& nodes = tree.nodes;
-  CHECK_EARLY_RETURN(nodes.count(node_key) > 0, "DeleteNode: no node found with node_key");
+  CHECK_GT(nodes.count(node_key), 0) << "DeleteNode: no node found with node_key";
   _Node* node = nodes[node_key].get();
   if (node->left_child != nullptr) {  // deleting a parent
     node->left_child->parent = nullptr;
@@ -127,25 +119,20 @@ TreeBuilder::DeleteNode(int node_key) {
   } else {
     nodes.erase(node_key);
   }
-  return true;
 }
 
-bool
+void
 TreeBuilder::SetRootNode(int node_key) {
   auto& tree = pimpl->tree;
   auto& nodes = tree.nodes;
-  CHECK_EARLY_RETURN(nodes.count(node_key) > 0,
-                     "SetRootNode: no node found with node_key");
+  CHECK_GT(nodes.count(node_key), 0) << "SetRootNode: no node found with node_key";
   _Node* node = nodes[node_key].get();
-  CHECK_EARLY_RETURN(node->status != _Node::_Status::kEmpty,
-                     "SetRootNode: cannot set an empty node as root");
-  CHECK_EARLY_RETURN(node->parent == nullptr,
-                     "SetRootNode: a root node cannot have a parent");
+  CHECK(node->status != _Node::_Status::kEmpty) << "SetRootNode: cannot set an empty node as root";
+  CHECK(!node->parent) << "SetRootNode: a root node cannot have a parent";
   tree.root = node;
-  return true;
 }
 
-bool
+void
 TreeBuilder::SetNumericalTestNode(int node_key,
                                   unsigned feature_id,
                                   const char* opname, tl_float threshold,
@@ -153,25 +140,22 @@ TreeBuilder::SetNumericalTestNode(int node_key,
                                   int right_child_key) {
   auto& tree = pimpl->tree;
   auto& nodes = tree.nodes;
-  CHECK_EARLY_RETURN(nodes.count(node_key) > 0,
-                     "SetNumericalTestNode: no node found with node_key");
-  CHECK_EARLY_RETURN(nodes.count(left_child_key) > 0,
-                    "SetNumericalTestNode: no node found with left_child_key");
-  CHECK_EARLY_RETURN(nodes.count(right_child_key) > 0,
-                   "SetNumericalTestNode: no node found with right_child_key");
+  CHECK_GT(nodes.count(node_key), 0) << "SetNumericalTestNode: no node found with node_key";
+  CHECK_GT(nodes.count(left_child_key), 0)
+    << "SetNumericalTestNode: no node found with left_child_key";
+  CHECK_GT(nodes.count(right_child_key), 0)
+    << "SetNumericalTestNode: no node found with right_child_key";
   _Node* node = nodes[node_key].get();
   _Node* left_child = nodes[left_child_key].get();
   _Node* right_child = nodes[right_child_key].get();
-  CHECK_EARLY_RETURN(node->status == _Node::_Status::kEmpty,
-                     "SetNumericalTestNode: cannot modify a non-empty node");
-  CHECK_EARLY_RETURN(left_child->parent == nullptr,
-             "SetNumericalTestNode: node designated as left child already has "
-             "a parent");
-  CHECK_EARLY_RETURN(right_child->parent == nullptr,
-            "SetNumericalTestNode: node designated as right child already has "
-            "a parent");
-  CHECK_EARLY_RETURN(left_child != tree.root && right_child != tree.root,
-                     "SetNumericalTestNode: the root node cannot be a child");
+  CHECK(node->status == _Node::_Status::kEmpty)
+    << "SetNumericalTestNode: cannot modify a non-empty node";
+  CHECK(!left_child->parent)
+    << "SetNumericalTestNode: node designated as left child already has a parent";
+  CHECK(!right_child->parent)
+    << "SetNumericalTestNode: node designated as right child already has a parent";
+  CHECK(left_child != tree.root && right_child != tree.root)
+    << "SetNumericalTestNode: the root node cannot be a child";
   node->status = _Node::_Status::kNumericalTest;
   node->left_child = nodes[left_child_key].get();
   node->left_child->parent = node;
@@ -182,10 +166,9 @@ TreeBuilder::SetNumericalTestNode(int node_key,
   node->info.threshold = threshold;
   CHECK_GT(optable.count(opname), 0) << "No operator \"" << opname << "\" exists";
   node->op = optable.at(opname);
-  return true;
 }
 
-bool
+void
 TreeBuilder::SetCategoricalTestNode(int node_key,
                                     unsigned feature_id,
                                     const std::vector<uint32_t>& left_categories,
@@ -193,25 +176,22 @@ TreeBuilder::SetCategoricalTestNode(int node_key,
                                     int right_child_key) {
   auto& tree = pimpl->tree;
   auto& nodes = tree.nodes;
-  CHECK_EARLY_RETURN(nodes.count(node_key) > 0,
-                     "SetCategoricalTestNode: no node found with node_key");
-  CHECK_EARLY_RETURN(nodes.count(left_child_key) > 0,
-                  "SetCategoricalTestNode: no node found with left_child_key");
-  CHECK_EARLY_RETURN(nodes.count(right_child_key) > 0,
-                 "SetCategoricalTestNode: no node found with right_child_key");
+  CHECK_GT(nodes.count(node_key), 0) << "SetCategoricalTestNode: no node found with node_key";
+  CHECK_GT(nodes.count(left_child_key), 0)
+    << "SetCategoricalTestNode: no node found with left_child_key";
+  CHECK_GT(nodes.count(right_child_key), 0)
+    << "SetCategoricalTestNode: no node found with right_child_key";
   _Node* node = nodes[node_key].get();
   _Node* left_child = nodes[left_child_key].get();
   _Node* right_child = nodes[right_child_key].get();
-  CHECK_EARLY_RETURN(node->status == _Node::_Status::kEmpty,
-                     "SetCategoricalTestNode: cannot modify a non-empty node");
-  CHECK_EARLY_RETURN(left_child->parent == nullptr,
-               "SetCategoricalTestNode: node designated as left child already "
-               "has a parent");
-  CHECK_EARLY_RETURN(right_child->parent == nullptr,
-              "SetCategoricalTestNode: node designated as right child already "
-              "has a parent");
-  CHECK_EARLY_RETURN(left_child != tree.root && right_child != tree.root,
-                    "SetCategoricalTestNode: the root node cannot be a child");
+  CHECK(node->status == _Node::_Status::kEmpty)
+    << "SetCategoricalTestNode: cannot modify a non-empty node";
+  CHECK(!left_child->parent)
+    << "SetCategoricalTestNode: node designated as left child already has a parent";
+  CHECK(!right_child->parent)
+    << "SetCategoricalTestNode: node designated as right child already has a parent";
+  CHECK(left_child != tree.root && right_child != tree.root)
+    << "SetCategoricalTestNode: the root node cannot be a child";
   node->status = _Node::_Status::kCategoricalTest;
   node->left_child = nodes[left_child_key].get();
   node->left_child->parent = node;
@@ -220,36 +200,29 @@ TreeBuilder::SetCategoricalTestNode(int node_key,
   node->feature_id = feature_id;
   node->default_left = default_left;
   node->left_categories = left_categories;
-  return true;
 }
 
-bool
+void
 TreeBuilder::SetLeafNode(int node_key, tl_float leaf_value) {
   auto& tree = pimpl->tree;
   auto& nodes = tree.nodes;
-  CHECK_EARLY_RETURN(nodes.count(node_key) > 0,
-                     "SetLeafNode: no node found with node_key");
+  CHECK_GT(nodes.count(node_key), 0) << "SetLeafNode: no node found with node_key";
   _Node* node = nodes[node_key].get();
-  CHECK_EARLY_RETURN(node->status == _Node::_Status::kEmpty,
-                     "SetLeafNode: cannot modify a non-empty node");
+  CHECK(node->status == _Node::_Status::kEmpty) << "SetLeafNode: cannot modify a non-empty node";
   node->status = _Node::_Status::kLeaf;
   node->info.leaf_value = leaf_value;
-  return true;
 }
 
-bool
-TreeBuilder::SetLeafVectorNode(int node_key,
-                               const std::vector<tl_float>& leaf_vector) {
+void
+TreeBuilder::SetLeafVectorNode(int node_key, const std::vector<tl_float>& leaf_vector) {
   auto& tree = pimpl->tree;
   auto& nodes = tree.nodes;
-  CHECK_EARLY_RETURN(nodes.count(node_key) > 0,
-    "SetLeafVectorNode: no node found with node_key");
+  CHECK_GT(nodes.count(node_key), 0) << "SetLeafVectorNode: no node found with node_key";
   _Node* node = nodes[node_key].get();
-  CHECK_EARLY_RETURN(node->status == _Node::_Status::kEmpty,
-    "SetLeafVectorNode: cannot modify a non-empty node");
+  CHECK(node->status == _Node::_Status::kEmpty)
+    << "SetLeafVectorNode: cannot modify a non-empty node";
   node->status = _Node::_Status::kLeaf;
   node->leaf_vector = leaf_vector;
-  return true;
 }
 
 ModelBuilder::ModelBuilder(int num_feature, int num_output_group,
@@ -310,24 +283,22 @@ ModelBuilder::InsertTree(TreeBuilder* tree_builder, int index) {
 
 TreeBuilder*
 ModelBuilder::GetTree(int index) {
-  return &pimpl->trees[index];
+  return &pimpl->trees.at(index);
 }
 
 const TreeBuilder*
 ModelBuilder::GetTree(int index) const {
-  return &pimpl->trees[index];
+  return &pimpl->trees.at(index);
 }
 
-bool
+void
 ModelBuilder::DeleteTree(int index) {
   auto& trees = pimpl->trees;
-  CHECK_EARLY_RETURN(static_cast<size_t>(index) < trees.size(),
-                     "DeleteTree: index out of bound");
+  CHECK_LT(static_cast<size_t>(index), trees.size()) << "DeleteTree: index out of bound";
   trees.erase(trees.begin() + index);
-  return true;
 }
 
-bool
+void
 ModelBuilder::CommitModel(Model* out_model) {
   Model model;
   model.num_feature = pimpl->num_feature;
@@ -344,8 +315,7 @@ ModelBuilder::CommitModel(Model* out_model) {
 
   for (const auto& _tree_builder : pimpl->trees) {
     const auto& _tree = _tree_builder.pimpl->tree;
-    CHECK_EARLY_RETURN(_tree.root != nullptr,
-                       "CommitModel: a tree has no root node");
+    CHECK(_tree.root) << "CommitModel: a tree has no root node";
     model.trees.emplace_back();
     Tree& tree = model.trees.back();
     tree.Init();
@@ -358,55 +328,44 @@ ModelBuilder::CommitModel(Model* out_model) {
       const _Node* node;
       int nid;
       std::tie(node, nid) = Q.front(); Q.pop();
-      CHECK_EARLY_RETURN(node->status != _Node::_Status::kEmpty,
-             "CommitModel: encountered an empty node in the middle of a tree");
+      CHECK(node->status != _Node::_Status::kEmpty)
+        << "CommitModel: encountered an empty node in the middle of a tree";
       if (node->status == _Node::_Status::kNumericalTest) {
-        CHECK_EARLY_RETURN(node->left_child != nullptr,
-                           "CommitModel: a test node lacks a left child");
-        CHECK_EARLY_RETURN(node->right_child != nullptr,
-                           "CommitModel: a test node lacks a right child");
-        CHECK_EARLY_RETURN(node->left_child->parent == node,
-                           "CommitModel: left child has wrong parent");
-        CHECK_EARLY_RETURN(node->right_child->parent == node,
-                           "CommitModel: right child has wrong parent");
+        CHECK(node->left_child) << "CommitModel: a test node lacks a left child";
+        CHECK(node->right_child) << "CommitModel: a test node lacks a right child";
+        CHECK(node->left_child->parent == node) << "CommitModel: left child has wrong parent";
+        CHECK(node->right_child->parent == node) << "CommitModel: right child has wrong parent";
         tree.AddChilds(nid);
         tree.SetNumericalSplit(nid, node->feature_id, node->info.threshold,
                                node->default_left, node->op);
         Q.push({node->left_child, tree.LeftChild(nid)});
         Q.push({node->right_child, tree.RightChild(nid)});
       } else if (node->status == _Node::_Status::kCategoricalTest) {
-        CHECK_EARLY_RETURN(node->left_child != nullptr,
-                           "CommitModel: a test node lacks a left child");
-        CHECK_EARLY_RETURN(node->right_child != nullptr,
-                           "CommitModel: a test node lacks a right child");
-        CHECK_EARLY_RETURN(node->left_child->parent == node,
-                           "CommitModel: left child has wrong parent");
-        CHECK_EARLY_RETURN(node->right_child->parent == node,
-                           "CommitModel: right child has wrong parent");
+        CHECK(node->left_child) << "CommitModel: a test node lacks a left child";
+        CHECK(node->right_child) << "CommitModel: a test node lacks a right child";
+        CHECK(node->left_child->parent == node) << "CommitModel: left child has wrong parent";
+        CHECK(node->right_child->parent == node) << "CommitModel: right child has wrong parent";
         tree.AddChilds(nid);
         tree.SetCategoricalSplit(nid, node->feature_id, node->default_left,
                                  false, node->left_categories);
         Q.push({node->left_child, tree.LeftChild(nid)});
         Q.push({node->right_child, tree.RightChild(nid)});
       } else {  // leaf node
-        CHECK_EARLY_RETURN(node->left_child == nullptr
-                           && node->right_child == nullptr,
-                           "CommitModel: a leaf node cannot have children");
+        CHECK(node->left_child == nullptr && node->right_child == nullptr)
+          << "CommitModel: a leaf node cannot have children";
         if (!node->leaf_vector.empty()) {  // leaf vector exists
-          CHECK_EARLY_RETURN(flag_leaf_vector != 0,
-                             "CommitModel: Inconsistent use of leaf vector: "
-                             "if one leaf node uses a leaf vector, "
-                             "*every* leaf node must use a leaf vector");
+          CHECK_NE(flag_leaf_vector, 0)
+            << "CommitModel: Inconsistent use of leaf vector: if one leaf node uses a leaf vector, "
+            << "*every* leaf node must use a leaf vector";
           flag_leaf_vector = 1;  // now every leaf must use leaf vector
-          CHECK_EARLY_RETURN(node->leaf_vector.size() == model.num_output_group,
-                              "CommitModel: The length of leaf vector must be "
-                              "identical to the number of output groups");
+          CHECK_EQ(node->leaf_vector.size(), model.num_output_group)
+            << "CommitModel: The length of leaf vector must be identical to the number of output "
+            << "groups";
           tree.SetLeafVector(nid, node->leaf_vector);
         } else {  // ordinary leaf
-          CHECK_EARLY_RETURN(flag_leaf_vector != 1,
-                             "CommitModel: Inconsistent use of leaf vector: "
-                             "if one leaf node does not use a leaf vector, "
-                             "*no other* leaf node can use a leaf vector");
+          CHECK_NE(flag_leaf_vector, 1)
+            << "CommitModel: Inconsistent use of leaf vector: if one leaf node does not use a leaf "
+            << "vector, *no other* leaf node can use a leaf vector";
           flag_leaf_vector = 0;  // now no leaf can use leaf vector
           tree.SetLeaf(nid, node->info.leaf_value);
         }
@@ -416,24 +375,22 @@ ModelBuilder::CommitModel(Model* out_model) {
   if (flag_leaf_vector == 0) {
     if (model.num_output_group > 1) {
       // multiclass classification with gradient boosted trees
-      CHECK_EARLY_RETURN(!model.random_forest_flag,
-        "To use a random forest for multi-class classification, each leaf "
-        "node must output a leaf vector specifying a probability "
-        "distribution");
-      CHECK_EARLY_RETURN(pimpl->trees.size() % model.num_output_group == 0,
-        "For multi-class classifiers with gradient boosted trees, the number "
-        "of trees must be evenly divisible by the number of output groups");
+      CHECK(!model.random_forest_flag)
+        << "To use a random forest for multi-class classification, each leaf node must output a "
+        << "leaf vector specifying a probability distribution";
+      CHECK_EQ(pimpl->trees.size() % model.num_output_group, 0)
+        << "For multi-class classifiers with gradient boosted trees, the number of trees must be "
+        << "evenly divisible by the number of output groups";
     }
   } else if (flag_leaf_vector == 1) {
     // multiclass classification with a random forest
-    CHECK_EARLY_RETURN(model.random_forest_flag,
-      "In multi-class classifiers with gradient boosted trees, each leaf "
-      "node must output a single floating-point value.");
+    CHECK(model.random_forest_flag)
+      << "In multi-class classifiers with gradient boosted trees, each leaf node must output a "
+      << "single floating-point value.";
   } else {
     LOG(FATAL) << "Impossible thing happened: model has no leaf node!";
   }
   *out_model = std::move(model);
-  return true;
 }
 
 }  // namespace frontend

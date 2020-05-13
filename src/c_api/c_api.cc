@@ -388,7 +388,7 @@ int TreeliteTreeBuilderCreateNode(TreeBuilderHandle handle, int node_key) {
   API_BEGIN();
   auto builder = static_cast<frontend::TreeBuilder*>(handle);
   CHECK(builder) << "Detected dangling reference to deleted TreeBuilder object";
-  return (builder->CreateNode(node_key)) ? 0 : -1;
+  builder->CreateNode(node_key);
   API_END();
 }
 
@@ -396,7 +396,7 @@ int TreeliteTreeBuilderDeleteNode(TreeBuilderHandle handle, int node_key) {
   API_BEGIN();
   auto builder = static_cast<frontend::TreeBuilder*>(handle);
   CHECK(builder) << "Detected dangling reference to deleted TreeBuilder object";
-  return (builder->DeleteNode(node_key)) ? 0 : -1;
+  builder->DeleteNode(node_key);
   API_END();
 }
 
@@ -404,7 +404,7 @@ int TreeliteTreeBuilderSetRootNode(TreeBuilderHandle handle, int node_key) {
   API_BEGIN();
   auto builder = static_cast<frontend::TreeBuilder*>(handle);
   CHECK(builder) << "Detected dangling reference to deleted TreeBuilder object";
-  return (builder->SetRootNode(node_key)) ? 0 : -1;
+  builder->SetRootNode(node_key);
   API_END();
 }
 
@@ -417,22 +417,18 @@ int TreeliteTreeBuilderSetNumericalTestNode(TreeBuilderHandle handle,
   API_BEGIN();
   auto builder = static_cast<frontend::TreeBuilder*>(handle);
   CHECK(builder) << "Detected dangling reference to deleted TreeBuilder object";
-  return (builder->SetNumericalTestNode(node_key, feature_id, opname,
-                                        static_cast<tl_float>(threshold),
-                                        (default_left != 0),
-                                        left_child_key, right_child_key)) \
-                                        ? 0 : -1;
+  builder->SetNumericalTestNode(node_key, feature_id, opname, static_cast<tl_float>(threshold),
+                                (default_left != 0), left_child_key, right_child_key);
   API_END();
 }
 
-int TreeliteTreeBuilderSetCategoricalTestNode(
-                                          TreeBuilderHandle handle,
-                                          int node_key, unsigned feature_id,
-                                          const unsigned int* left_categories,
-                                          size_t left_categories_len,
-                                          int default_left,
-                                          int left_child_key,
-                                          int right_child_key) {
+int TreeliteTreeBuilderSetCategoricalTestNode(TreeBuilderHandle handle,
+                                              int node_key, unsigned feature_id,
+                                              const unsigned int* left_categories,
+                                              size_t left_categories_len,
+                                              int default_left,
+                                              int left_child_key,
+                                              int right_child_key) {
   API_BEGIN();
   auto builder = static_cast<frontend::TreeBuilder*>(handle);
   CHECK(builder) << "Detected dangling reference to deleted TreeBuilder object";
@@ -441,20 +437,16 @@ int TreeliteTreeBuilderSetCategoricalTestNode(
     CHECK(left_categories[i] <= std::numeric_limits<uint32_t>::max());
     vec[i] = static_cast<uint32_t>(left_categories[i]);
   }
-  return (builder->SetCategoricalTestNode(node_key, feature_id, vec,
-                                          (default_left != 0),
-                                          left_child_key, right_child_key)) \
-                                          ? 0 : -1;
+  builder->SetCategoricalTestNode(node_key, feature_id, vec, (default_left != 0),
+                                  left_child_key, right_child_key);
   API_END();
 }
 
-int TreeliteTreeBuilderSetLeafNode(TreeBuilderHandle handle, int node_key,
-                                   double leaf_value) {
+int TreeliteTreeBuilderSetLeafNode(TreeBuilderHandle handle, int node_key, double leaf_value) {
   API_BEGIN();
   auto builder = static_cast<frontend::TreeBuilder*>(handle);
   CHECK(builder) << "Detected dangling reference to deleted TreeBuilder object";
-  return (builder->SetLeafNode(node_key, static_cast<tl_float>(leaf_value))) \
-                              ? 0 : -1;
+  builder->SetLeafNode(node_key, static_cast<tl_float>(leaf_value));
   API_END();
 }
 
@@ -469,7 +461,7 @@ int TreeliteTreeBuilderSetLeafVectorNode(TreeBuilderHandle handle,
   for (size_t i = 0; i < leaf_vector_len; ++i) {
     vec[i] = static_cast<tl_float>(leaf_vector[i]);
   }
-  return (builder->SetLeafVectorNode(node_key, vec)) ? 0 : -1;
+  builder->SetLeafVectorNode(node_key, vec);
   API_END();
 }
 
@@ -527,7 +519,7 @@ int TreeliteModelBuilderDeleteTree(ModelBuilderHandle handle, int index) {
   API_BEGIN();
   auto builder = static_cast<frontend::ModelBuilder*>(handle);
   CHECK(builder) << "Detected dangling reference to deleted ModelBuilder object";
-  return (builder->DeleteTree(index)) ? 0 : -1;
+  builder->DeleteTree(index);
   API_END();
 }
 
@@ -537,12 +529,7 @@ int TreeliteModelBuilderCommitModel(ModelBuilderHandle handle,
   auto builder = static_cast<frontend::ModelBuilder*>(handle);
   CHECK(builder) << "Detected dangling reference to deleted ModelBuilder object";
   Model* model = new Model();
-  const bool result = builder->CommitModel(model);
-  if (result) {
-    *out = static_cast<ModelHandle>(model);
-    return 0;
-  } else {
-    return -1;
-  }
+  builder->CommitModel(model);
+  *out = static_cast<ModelHandle>(model);
   API_END();
 }

@@ -63,21 +63,18 @@ class TreeBuilder {
   /*!
    * \brief Create an empty node within a tree
    * \param node_key unique integer key to identify the new node
-   * \return whether successful
    */
-  bool CreateNode(int node_key);
+  void CreateNode(int node_key);
   /*!
    * \brief Remove a node from a tree
    * \param node_key unique integer key to identify the node to be removed
-   * \return whether successful
    */
-  bool DeleteNode(int node_key);
+  void DeleteNode(int node_key);
   /*!
    * \brief Set a node as the root of a tree
    * \param node_key unique integer key to identify the root node
-   * \return whether successful
    */
-  bool SetRootNode(int node_key);
+  void SetRootNode(int node_key);
   /*!
    * \brief Turn an empty node into a numerical test node; the test is in the
    *        form [feature value] OP [threshold]. Depending on the result of the
@@ -90,9 +87,8 @@ class TreeBuilder {
    * \param default_left default direction for missing values
    * \param left_child_key unique integer key to identify the left child node
    * \param right_child_key unique integer key to identify the right child node
-   * \return whether successful
    */
-  bool SetNumericalTestNode(int node_key, unsigned feature_id,
+  void SetNumericalTestNode(int node_key, unsigned feature_id,
                             const char* op, tl_float threshold, bool default_left,
                             int left_child_key, int right_child_key);
   /*!
@@ -107,9 +103,8 @@ class TreeBuilder {
    * \param default_left default direction for missing values
    * \param left_child_key unique integer key to identify the left child node
    * \param right_child_key unique integer key to identify the right child node
-   * \return whether successful
    */
-  bool SetCategoricalTestNode(int node_key,
+  void SetCategoricalTestNode(int node_key,
                               unsigned feature_id,
                               const std::vector<uint32_t>& left_categories,
                               bool default_left, int left_child_key,
@@ -119,9 +114,8 @@ class TreeBuilder {
    * \param node_key unique integer key to identify the node being modified;
    *                 this node needs to be empty
    * \param leaf_value leaf value (weight) of the leaf node
-   * \return whether successful
    */
-  bool SetLeafNode(int node_key, tl_float leaf_value);
+  void SetLeafNode(int node_key, tl_float leaf_value);
   /*!
   * \brief Turn an empty node into a leaf vector node
   * The leaf vector (collection of multiple leaf weights per leaf node) is
@@ -129,9 +123,8 @@ class TreeBuilder {
   * \param node_key unique integer key to identify the node being modified;
   *                 this node needs to be empty
   * \param leaf_vector leaf vector of the leaf node
-  * \return whether successful
   */
-  bool SetLeafVectorNode(int node_key,
+  void SetLeafVectorNode(int node_key,
                          const std::vector<tl_float>& leaf_vector);
 
  private:
@@ -185,16 +178,13 @@ class ModelBuilder {
   /*!
    * \brief Remove a tree from the ensemble
    * \param index index of the tree that would be removed
-   * \return whether successful
    */
-  bool DeleteTree(int index);
+  void DeleteTree(int index);
   /*!
    * \brief finalize the model and produce the in-memory representation
-   * \param out_model place to store in-memory representation of the finished
-   *                  model
-   * \return whether successful
+   * \param out_model place to store in-memory representation of the finished model
    */
-  bool CommitModel(Model* out_model);
+  void CommitModel(Model* out_model);
 
  private:
   std::unique_ptr<ModelBuilderImpl> pimpl;  // Pimpl pattern
