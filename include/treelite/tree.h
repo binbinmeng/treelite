@@ -130,6 +130,14 @@ class Tree {
   static_assert(std::is_pod<Node>::value, "Node must be a POD type");
   static_assert(sizeof(Node) == 48, "Node must be 48 bytes");
 
+  Tree() = default;
+  ~Tree() = default;
+  Tree(const Tree&) = delete;
+  Tree& operator=(const Tree&) = delete;
+  Tree(Tree&&) = default;
+  Tree& operator=(Tree&&) = default;
+  inline Tree Clone() const;
+
   inline std::vector<PyBufferFrame> GetPyBuffer();
   inline void InitFromPyBuffer(std::vector<PyBufferFrame> frames);
 

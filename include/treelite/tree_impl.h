@@ -397,6 +397,18 @@ Tree::AllocNode() {
   return nd;
 }
 
+inline Tree
+Tree::Clone() const {
+  Tree tree;
+  tree.num_nodes = num_nodes;
+  tree.nodes_ = nodes_.Clone();
+  tree.leaf_vector_ = leaf_vector_.Clone();
+  tree.leaf_vector_offset_ = leaf_vector_offset_.Clone();
+  tree.left_categories_ = left_categories_.Clone();
+  tree.left_categories_offset_ = left_categories_offset_.Clone();
+  return tree;
+}
+
 inline void
 Tree::Init() {
   num_nodes = 1;
