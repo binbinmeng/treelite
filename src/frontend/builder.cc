@@ -138,6 +138,18 @@ TreeBuilder::SetNumericalTestNode(int node_key,
                                   const char* opname, tl_float threshold,
                                   bool default_left, int left_child_key,
                                   int right_child_key) {
+  CHECK_GT(optable.count(opname), 0) << "No operator \"" << opname << "\" exists";
+  Operator op = optable.at(opname);
+  SetNumericalTestNode(node_key, feature_id, op, threshold, default_left,
+      left_child_key, right_child_key);
+}
+
+void
+TreeBuilder::SetNumericalTestNode(int node_key,
+                                  unsigned feature_id,
+                                  Operator op, tl_float threshold,
+                                  bool default_left, int left_child_key,
+                                  int right_child_key) {
   auto& tree = pimpl->tree;
   auto& nodes = tree.nodes;
   CHECK_GT(nodes.count(node_key), 0) << "SetNumericalTestNode: no node found with node_key";
@@ -164,8 +176,7 @@ TreeBuilder::SetNumericalTestNode(int node_key,
   node->feature_id = feature_id;
   node->default_left = default_left;
   node->info.threshold = threshold;
-  CHECK_GT(optable.count(opname), 0) << "No operator \"" << opname << "\" exists";
-  node->op = optable.at(opname);
+  node->op = op;
 }
 
 void

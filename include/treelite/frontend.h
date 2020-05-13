@@ -91,6 +91,9 @@ class TreeBuilder {
   void SetNumericalTestNode(int node_key, unsigned feature_id,
                             const char* op, tl_float threshold, bool default_left,
                             int left_child_key, int right_child_key);
+  void SetNumericalTestNode(int node_key, unsigned feature_id,
+                            Operator op, tl_float threshold, bool default_left,
+                            int left_child_key, int right_child_key);
   /*!
    * \brief Turn an empty node into a categorical test node.
    * A list defines all categories that would be classified as the left side.
