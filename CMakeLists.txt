@@ -86,7 +86,7 @@ set(RUNTIME_SOURCES
 
 add_library(objtreelite OBJECT ${SOURCES})
 target_include_directories(objtreelite PUBLIC include)
-target_link_libraries(objtreelite PUBLIC dmlc PRIVATE fmt::fmt)
+target_link_libraries(objtreelite PUBLIC dmlc PRIVATE fmt::fmt-header-only)
 
 add_library(objtreelite_runtime OBJECT ${RUNTIME_SOURCES})
 target_include_directories(objtreelite_runtime PUBLIC include)
@@ -115,7 +115,7 @@ target_link_libraries(treelite_runtime PUBLIC objtreelite_runtime)
 add_library(treelite_runtime_static STATIC)
 target_link_libraries(treelite_runtime_static PUBLIC objtreelite_runtime)
 
-set_target_properties(objtreelite objtreelite_runtime fmt
+set_target_properties(objtreelite objtreelite_runtime
   PROPERTIES
   POSITION_INDEPENDENT_CODE ON
   CXX_STANDARD 11

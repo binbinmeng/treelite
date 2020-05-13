@@ -13,3 +13,4 @@ FetchContent_Declare(
   GIT_TAG         6.2.1
 )
 FetchContent_MakeAvailable(fmtlib)
+set_target_properties(fmt PROPERTIES EXCLUDE_FROM_ALL TRUE)
