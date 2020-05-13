@@ -310,7 +310,8 @@ int TreeliteCompilerFree(CompilerHandle handle) {
 int TreeliteLoadLightGBMModel(const char* filename,
                               ModelHandle* out) {
   API_BEGIN();
-  Model* model = new Model(std::move(frontend::LoadLightGBMModel(filename)));
+  Model* model = new Model();
+  frontend::LoadLightGBMModel(filename, model);
   *out = static_cast<ModelHandle>(model);
   API_END();
 }
@@ -318,7 +319,8 @@ int TreeliteLoadLightGBMModel(const char* filename,
 int TreeliteLoadXGBoostModel(const char* filename,
                              ModelHandle* out) {
   API_BEGIN();
-  Model* model = new Model(std::move(frontend::LoadXGBoostModel(filename)));
+  Model* model = new Model();
+  frontend::LoadXGBoostModel(filename, model);
   *out = static_cast<ModelHandle>(model);
   API_END();
 }
@@ -326,7 +328,8 @@ int TreeliteLoadXGBoostModel(const char* filename,
 int TreeliteLoadXGBoostModelFromMemoryBuffer(const void* buf, size_t len,
                                              ModelHandle* out) {
   API_BEGIN();
-  Model* model = new Model(std::move(frontend::LoadXGBoostModel(buf, len)));
+  Model* model = new Model();
+  frontend::LoadXGBoostModel(buf, len, model);
   *out = static_cast<ModelHandle>(model);
   API_END();
 }
