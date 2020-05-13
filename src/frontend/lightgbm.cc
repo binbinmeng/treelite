@@ -10,6 +10,7 @@
 #include <treelite/tree.h>
 #include <unordered_map>
 #include <queue>
+#include <limits>
 #include <cstring>
 
 namespace {
@@ -81,7 +82,8 @@ inline int TextToNumber(const std::string& str) {
   errno = 0;
   char *endptr;
   auto val = std::strtol(str.c_str(), &endptr, 10);
-  if (errno == ERANGE || val < INT_MIN || val > INT_MAX) {
+  if (errno == ERANGE || val < std::numeric_limits<int>::min()
+      || val > std::numeric_limits<int>::max()) {
     LOG(FATAL) << "Range error while converting string to int";
   } else if (errno != 0) {
     LOG(FATAL) << "Unknown error";
@@ -96,7 +98,8 @@ inline int8_t TextToNumber(const std::string& str) {
   errno = 0;
   char *endptr;
   auto val = std::strtol(str.c_str(), &endptr, 10);
-  if (errno == ERANGE || val < INT8_MIN || val > INT8_MAX) {
+  if (errno == ERANGE || val < std::numeric_limits<int8_t>::min()
+      || val > std::numeric_limits<int8_t>::max()) {
     LOG(FATAL) << "Range error while converting string to int8_t";
   } else if (errno != 0) {
     LOG(FATAL) << "Unknown error";
@@ -111,7 +114,7 @@ inline uint32_t TextToNumber(const std::string& str) {
   errno = 0;
   char *endptr;
   auto val = std::strtoul(str.c_str(), &endptr, 10);
-  if (errno == ERANGE || val > UINT32_MAX) {
+  if (errno == ERANGE || val > std::numeric_limits<uint32_t>::max()) {
     LOG(FATAL) << "Range error while converting string to uint32_t";
   } else if (errno != 0) {
     LOG(FATAL) << "Unknown error";
@@ -126,7 +129,7 @@ inline uint64_t TextToNumber(const std::string& str) {
   errno = 0;
   char *endptr;
   auto val = std::strtoull(str.c_str(), &endptr, 10);
-  if (errno == ERANGE || val > UINT64_MAX) {
+  if (errno == ERANGE || val > std::numeric_limits<uint64_t>::max()) {
     LOG(FATAL) << "Range error while converting string to uint64_t";
   } else if (errno != 0) {
     LOG(FATAL) << "Unknown error";

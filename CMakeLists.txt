@@ -115,7 +115,7 @@ target_link_libraries(treelite_runtime PUBLIC objtreelite_runtime)
 add_library(treelite_runtime_static STATIC)
 target_link_libraries(treelite_runtime_static PUBLIC objtreelite_runtime)
 
-set_target_properties(objtreelite objtreelite_runtime
+set_target_properties(objtreelite objtreelite_runtime fmt
   PROPERTIES
   POSITION_INDEPENDENT_CODE ON
   CXX_STANDARD 11
