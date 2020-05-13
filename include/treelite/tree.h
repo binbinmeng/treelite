@@ -435,6 +435,7 @@ struct Model {
 
   inline std::vector<PyBufferFrame> GetPyBuffer();
   inline void InitFromPyBuffer(std::vector<PyBufferFrame> frames);
+  inline Model Clone() const;
 };
 
 }  // namespace treelite

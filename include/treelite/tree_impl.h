@@ -645,6 +645,19 @@ Tree::SetGain(int nid, double gain) {
   node.gain_present_ = true;
 }
 
+inline Model
+Model::Clone() const {
+  Model model;
+  for (const Tree& t : trees) {
+    model.trees.push_back(t.Clone());
+  }
+  model.num_feature = num_feature;
+  model.num_output_group = num_output_group;
+  model.random_forest_flag = random_forest_flag;
+  model.param = param;
+  return model;
+}
+
 inline void InitParamAndCheck(ModelParam* param,
                               const std::vector<std::pair<std::string, std::string>> cfg) {
   auto unknown = param->InitAllowUnknown(cfg);
