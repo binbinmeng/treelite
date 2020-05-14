@@ -9,8 +9,8 @@
 
 #include <string>
 #include <unordered_map>
+#include <stdexcept>
 #include <cstdint>
-#include <dmlc/logging.h>
 
 namespace treelite {
 
@@ -64,7 +64,7 @@ inline bool CompareWithOp(tl_float lhs, Operator op, tl_float rhs) {
     case Operator::kGT: return lhs >  rhs;
     case Operator::kGE: return lhs >= rhs;
     default:
-      LOG(FATAL) << "operator undefined";
+      throw std::runtime_error("operator undefined");
       return false;
   }
 }
