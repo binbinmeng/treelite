@@ -6,12 +6,13 @@ class SKLConverterBase:
     @classmethod
     def process_tree(cls, sklearn_tree, sklearn_model):
         treelite_tree = treelite.ModelBuilder.Tree()
-        # Node #0 is always root for scikit-learn decision trees
-        treelite_tree[0].set_root()
 
         # Iterate over each node: node ID ranges from 0 to [node_count]-1
         for node_id in range(sklearn_tree.node_count):
             cls.process_node(treelite_tree, sklearn_tree, node_id, sklearn_model)
+
+        # Node #0 is always root for scikit-learn decision trees
+        treelite_tree[0].set_root()
 
         return treelite_tree
 

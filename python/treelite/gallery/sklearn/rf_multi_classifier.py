@@ -12,8 +12,8 @@ class SKLRFMultiClassifierMixin:
                                         pred_transform='identity_multiclass')
         for i in range(sklearn_model.n_estimators):
             # Process i-th tree and add to the builder
-            builder.append(process_tree(sklearn_model.estimators_[i].tree_,
-                                        sklearn_model))
+            builder.append(cls.process_tree(sklearn_model.estimators_[i].tree_,
+                                            sklearn_model))
 
         return builder.commit()
 

@@ -143,6 +143,9 @@ if __name__ == '__main__':
               'install_lib': InstallLib,
               'install': Install
           },
+          extras_require={
+              'scikit-learn': ['scikit-learn']
+          },
           author='DMLC',
           maintainer='Hyunsu Cho',
           maintainer_email='chohyu01@cs.washington.edu',

@@ -21,9 +21,6 @@ def check_predictor(predictor, dataset):
     if dataset_db[dataset].is_multiclass:
         expected_margin = expected_margin.reshape((dtest.shape[0], -1))
     out_margin = predictor.predict(batch, pred_margin=True)
-    x = np.abs(expected_margin - out_margin)
-    i = np.argmax(x)
-    print((i, expected_margin[i], out_margin[i]))
     np.testing.assert_almost_equal(out_margin, expected_margin, decimal=5)
 
     if dataset_db[dataset].expected_prob is not None:
@@ -46,7 +43,7 @@ def test_basic(tmpdir, dataset, use_annotation, quantize, parallel_comp, toolcha
     libpath = os.path.join(tmpdir, dataset_db[dataset].libname + _libext())
     model = treelite.Model.load(dataset_db[dataset].model, model_format='xgboost')
     dtrain = treelite.DMatrix(dataset_db[dataset].dtrain)
-    annotation_path = os.path.join(tmpdir, './annotation.json')
+    annotation_path = os.path.join(tmpdir, 'annotation.json')
 
     if use_annotation:
         annotator = treelite.Annotator()

@@ -13,4 +13,5 @@ VERSION_FILE = os.path.join(os.path.dirname(__file__), 'VERSION')
 with open(VERSION_FILE, 'r') as _f:
     __version__ = _f.read().strip()
 
-__all__ = ['DMatrix', 'Model', 'ModelBuilder', 'Annotator', 'create_shared', 'generate_makefile']
+__all__ = ['DMatrix', 'Model', 'ModelBuilder', 'Annotator', 'create_shared', 'generate_makefile',
+           'gallery']
