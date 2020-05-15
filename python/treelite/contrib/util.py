@@ -71,7 +71,7 @@ def _enqueue(args):
                             stderr=subprocess.STDOUT)
     proc.stdin.write(init_cmd.encode('utf-8'))
     proc.stdin.write(f'cd {dirpath}\n'.encode('utf-8'))
-    proc.stdin.write(create_log_cmd('retcode_cpu{tid}.txt\n').encode('utf-8'))
+    proc.stdin.write(create_log_cmd(f'retcode_cpu{tid}.txt\n').encode('utf-8'))
     for command in queue:
         proc.stdin.write((command + '\n').encode('utf-8'))
         proc.stdin.write((save_retcode_cmd(f'retcode_cpu{tid}.txt') + '\n').encode('utf-8'))

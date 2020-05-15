@@ -2,6 +2,7 @@
 /runtime/python/treelite_runtime/VERSION
 /runtime/python/.idea/
 /python/.idea/
+/tests/python/.idea/
 /.idea/
 /build/
 __pycache__
