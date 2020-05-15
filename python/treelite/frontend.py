@@ -21,7 +21,7 @@ def _isascii(string):
         return False
 
 
-class Model():
+class Model:
     """
     Decision tree ensemble model
 
@@ -365,7 +365,7 @@ class Model():
         return Model(handle)
 
 
-class ModelBuilder():
+class ModelBuilder:
     """
     Builder class for tree ensemble model: provides tools to iteratively build
     an ensemble of decision trees
@@ -386,7 +386,7 @@ class ModelBuilder():
         parameters.
     """
 
-    class Node():
+    class Node:
         """Handle to a node in a tree"""
 
         def __init__(self):
@@ -554,7 +554,7 @@ class ModelBuilder():
                 ctypes.c_int(right_child_key)))
             self.empty = False
 
-    class Tree():
+    class Tree:
         """Handle to a decision tree in a tree ensemble Builder"""
 
         def __init__(self):

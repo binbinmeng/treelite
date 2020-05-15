@@ -86,7 +86,7 @@ def _maybe_pandas_data(data, feature_names, feature_types):
     return data, feature_names, feature_types
 
 
-class DMatrix():
+class DMatrix:
     """Data matrix used in Treelite.
 
     Parameters
