@@ -1,0 +1,13 @@
+/python/treelite/VERSION
+/runtime/python/treelite_runtime/VERSION
+/runtime/python/.idea/
+/python/.idea/
+/.idea/
+/build/
+__pycache__
+/python/dist/
+/python/build/
+/python/treelite.egg-info/
+/runtime/python/dist/
+/runtime/python/build/
+/runtime/python/treelite_runtime.egg-info/

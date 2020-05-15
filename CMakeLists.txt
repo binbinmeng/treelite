@@ -1,7 +1,10 @@
 cmake_minimum_required (VERSION 3.14)
-project(treelite)
+project(treelite LANGUAGES CXX C VERSION 0.9.0)
 include(cmake/Utils.cmake)
 include(cmake/ExternalLibs.cmake)
+include(cmake/Version.cmake)
+
+write_version()
 
 # CMake options
 option(USE_OPENMP "Use OpenMP" ON)
