@@ -7,7 +7,7 @@ import os
 import re
 import numpy as np
 import scipy.sparse
-from .util import c_str, _log_callback, TreeliteRuntimeError, lineno, log_info
+from .util import c_str, py_str, _log_callback, TreeliteRuntimeError, lineno, log_info
 from .libpath import TreeliteRuntimeLibraryNotFound, find_lib_path
 
 
@@ -18,7 +18,7 @@ def _load_runtime_lib():
     lib.TreeliteGetLastError.restype = ctypes.c_char_p
     lib.callback = _log_callback
     if lib.TreeliteRegisterLogCallback(lib.callback) != 0:
-        raise TreeliteRuntimeError(lib.TreeliteGetLastError())
+        raise TreeliteRuntimeError(py_str(lib.TreeliteGetLastError()))
     return lib
 
 
@@ -45,7 +45,7 @@ def _check_call(ret):
         return value from API calls
     """
     if ret != 0:
-        raise TreeliteRuntimeError(_LIB.TreeliteGetLastError())
+        raise TreeliteRuntimeError(py_str(_LIB.TreeliteGetLastError()))
 
 
 class PredictorEntry(ctypes.Union):

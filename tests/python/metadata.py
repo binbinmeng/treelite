@@ -17,11 +17,16 @@ _dataset_db = {
     'dermatology': Dataset(model='dermatology.model', dtrain='dermatology.train',
                            dtest='dermatology.test', libname='dermatology',
                            expected_prob='dermatology.test.prob',
-                           expected_margin='dermatology.test.margin', is_multiclass=True)
+                           expected_margin='dermatology.test.margin', is_multiclass=True),
+    'letor': Dataset(model='mq2008.model', dtrain='mq2008.train', dtest='mq2008.test',
+                     libname='letor', expected_prob=None, expected_margin='mq2008.test.pred',
+                     is_multiclass=False)
 }
 
 
 def _qualify_path(prefix, path):
+    if path is None:
+        return None
     return os.path.join(_dpath, prefix, path)
 
 
