@@ -771,6 +771,3 @@ class ModelBuilder():
             _check_call(_LIB.TreeliteModelBuilderSetModelParam(self.handle,
                                                                c_str(key),
                                                                c_str(val)))
-
-
-__all__ = ['Model', 'ModelBuilder']

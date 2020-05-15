@@ -252,6 +252,3 @@ class DMatrix():
         _check_call(_LIB.TreeliteDMatrixGetPreview(self.handle,
                                                    ctypes.byref(preview)))
         return py_str(preview.value)
-
-
-__all__ = ['DMatrix']

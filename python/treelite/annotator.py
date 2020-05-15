@@ -68,5 +68,3 @@ class Annotator():
         if self.handle is not None:
             _check_call(_LIB.TreeliteAnnotationFree(self.handle))
             self.handle = None
-
-__all__ = ['Annotator']

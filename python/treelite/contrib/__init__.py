@@ -212,6 +212,3 @@ def create_shared(toolchain, dirpath, nthread=None, verbose=False, options=None)
         log_info(__file__, lineno(),
                  f'Generated shared library in {time.time() - tstart:.2f} seconds')
     return libpath
-
-
-__all__ = ['create_shared', 'generate_makefile']

@@ -450,6 +450,3 @@ class Predictor(object):
     def sigmoid_alpha(self):
         """Query sigmoid alpha of the model"""
         return self.sigmoid_alpha_
-
-
-__all__ = ['Predictor', 'Batch']
