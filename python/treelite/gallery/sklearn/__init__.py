@@ -75,7 +75,7 @@ class SKLGBMRegressorConverter(SKLGBMRegressorMixin, SKLConverterBase):
     pass
 
 
-class SKLGBMClassifierConverter(SKLRFClassifierMixin, SKLConverterBase):
+class SKLGBMClassifierConverter(SKLGBMClassifierMixin, SKLConverterBase):
     pass
 
 
