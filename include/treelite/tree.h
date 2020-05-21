@@ -388,7 +388,6 @@ struct ModelParam {
   ModelParam(ModelParam&&) = default;
   ModelParam& operator=(ModelParam&&) = default;
 
-  /* Override methods of dmlc::Parameter, since it can't handle char[] member */
   template<typename Container>
   inline std::vector<std::pair<std::string, std::string>>
   InitAllowUnknown(const Container &kwargs);
