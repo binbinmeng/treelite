@@ -14,6 +14,7 @@
 #include <utility>
 #include <type_traits>
 #include <limits>
+#include <cstring>
 
 #define __TREELITE_STR(x) #x
 #define _TREELITE_STR(x) __TREELITE_STR(x)
