@@ -7,6 +7,34 @@
 #ifndef TREELITE_TREE_IMPL_H_
 #define TREELITE_TREE_IMPL_H_
 
+#include <sstream>
+#include <iomanip>
+#include <stdexcept>
+#include <iostream>
+
+namespace {
+
+template <typename T>
+inline std::string GetString(T x) {
+  return std::to_string(x);
+}
+
+template <>
+inline std::string GetString<float>(float x) {
+  std::ostringstream oss;
+  oss << std::setprecision(std::numeric_limits<float>::max_digits10) << x;
+  return oss.str();
+}
+
+template <>
+inline std::string GetString<double>(double x) {
+  std::ostringstream oss;
+  oss << std::setprecision(std::numeric_limits<double>::max_digits10) << x;
+  return oss.str();
+}
+
+}  // anonymous namespace
+
 namespace treelite {
 
 template <typename T>
@@ -48,7 +76,9 @@ inline ContiguousArray<T>
 ContiguousArray<T>::Clone() const {
   ContiguousArray clone;
   clone.buffer_ = static_cast<T*>(std::malloc(sizeof(T) * capacity_));
-  CHECK(clone.buffer_);
+  if (!clone.buffer_) {
+    throw std::runtime_error("Could not allocate memory for the clone");
+  }
   std::memcpy(clone.buffer_, buffer_, sizeof(T) * size_);
   clone.size_ = size_;
   clone.capacity_ = capacity_;
@@ -113,9 +143,13 @@ ContiguousArray<T>::Size() const {
 template <typename T>
 inline void
 ContiguousArray<T>::Reserve(size_t newsize) {
-  CHECK(owned_buffer_) << "Cannot resize when using a foreign buffer; clone first";
+  if (!owned_buffer_) {
+    throw std::runtime_error("Cannot resize when using a foreign buffer; clone first");
+  }
   T* newbuf = static_cast<T*>(std::realloc(static_cast<void*>(buffer_), sizeof(T) * newsize));
-  CHECK(newbuf);
+  if (!newbuf) {
+    throw std::runtime_error("Could not expand buffer");
+  }
   buffer_ = newbuf;
   capacity_ = newsize;
 }
@@ -123,7 +157,9 @@ ContiguousArray<T>::Reserve(size_t newsize) {
 template <typename T>
 inline void
 ContiguousArray<T>::Resize(size_t newsize) {
-  CHECK(owned_buffer_) << "Cannot resize when using a foreign buffer; clone first";
+  if (!owned_buffer_) {
+    throw std::runtime_error("Cannot resize when using a foreign buffer; clone first");
+  }
   if (newsize > capacity_) {
     size_t newcapacity = capacity_;
     if (newcapacity == 0) {
@@ -140,7 +176,9 @@ ContiguousArray<T>::Resize(size_t newsize) {
 template <typename T>
 inline void
 ContiguousArray<T>::Resize(size_t newsize, T t) {
-  CHECK(owned_buffer_) << "Cannot resize when using a foreign buffer; clone first";
+  if (!owned_buffer_) {
+    throw std::runtime_error("Cannot resize when using a foreign buffer; clone first");
+  }
   size_t oldsize = Size();
   Resize(newsize);
   for (size_t i = oldsize; i < newsize; ++i) {
@@ -151,14 +189,18 @@ ContiguousArray<T>::Resize(size_t newsize, T t) {
 template <typename T>
 inline void
 ContiguousArray<T>::Clear() {
-  CHECK(owned_buffer_) << "Cannot clear when using a foreign buffer; clone first";
+  if (!owned_buffer_) {
+    throw std::runtime_error("Cannot clear when using a foreign buffer; clone first");
+  }
   Resize(0);
 }
 
 template <typename T>
 inline void
 ContiguousArray<T>::PushBack(T t) {
-  CHECK(owned_buffer_) << "Cannot add element when using a foreign buffer; clone first";
+  if (!owned_buffer_) {
+    throw std::runtime_error("Cannot add element when using a foreign buffer; clone first");
+  }
   if (size_ == capacity_) {
     Reserve(capacity_ * 2);
   }
@@ -168,7 +210,9 @@ ContiguousArray<T>::PushBack(T t) {
 template <typename T>
 inline void
 ContiguousArray<T>::Extend(const std::vector<T>& other) {
-  CHECK(owned_buffer_) << "Cannot add elements when using a foreign buffer; clone first";
+  if (!owned_buffer_) {
+    throw std::runtime_error("Cannot add elements when using a foreign buffer; clone first");
+  }
   size_t newsize = size_ + other.size();
   if (newsize > capacity_) {
     size_t newcapacity = capacity_;
@@ -199,31 +243,27 @@ ContiguousArray<T>::operator[](size_t idx) const {
 template<typename Container>
 inline std::vector<std::pair<std::string, std::string> >
 ModelParam::InitAllowUnknown(const Container& kwargs) {
-  Container copy = kwargs;
-  for (auto it = copy.begin(); it != copy.end(); ) {
-    if (it->first == "pred_transform") {
-      std::strncpy(this->pred_transform, it->second.c_str(),
+  std::vector<std::pair<std::string, std::string>> unknowns;
+  for (const auto& e : kwargs) {
+    if (e.first == "pred_transform") {
+      std::strncpy(this->pred_transform, e.second.c_str(),
                    TREELITE_MAX_PRED_TRANSFORM_LENGTH - 1);
       this->pred_transform[TREELITE_MAX_PRED_TRANSFORM_LENGTH - 1] = '\0';
-      it = copy.erase(it);
-    } else {
-      ++it;
+    } else if (e.first == "sigmoid_alpha") {
+      this->sigmoid_alpha = dmlc::stof(e.second, nullptr);
+    } else if (e.first == "global_bias") {
+      this->global_bias = dmlc::stof(e.second, nullptr);
     }
   }
-  return dmlc::Parameter<ModelParam>::InitAllowUnknown(copy);
-}
-
-template<typename Container>
-inline void
-ModelParam::UpdateDict(Container *dict) const {
-  dmlc::Parameter<ModelParam>::UpdateDict(dict);
-  (*dict)["pred_transform"] = std::string(this->pred_transform);
+  return unknowns;
 }
 
 inline std::map<std::string, std::string>
 ModelParam::__DICT__() const {
-  auto ret = dmlc::Parameter<ModelParam>::__DICT__();
+  std::map<std::string, std::string> ret;
   ret.emplace("pred_transform", std::string(this->pred_transform));
+  ret.emplace("sigmoid_alpha", GetString(this->sigmoid_alpha));
+  ret.emplace("global_bias", GetString(this->global_bias));
   return ret;
 }
 
@@ -244,18 +284,22 @@ inline const char* InferFormatString() {
      if (std::is_integral<T>::value) {
        return (std::is_unsigned<T>::value ? "=L" : "=l");
      } else {
-       CHECK(std::is_floating_point<T>::value);
+       if (!std::is_floating_point<T>::value) {
+         throw std::runtime_error("Could not infer format string");
+       }
        return "=f";
      }
    case 8:
      if (std::is_integral<T>::value) {
        return (std::is_unsigned<T>::value ? "=Q" : "=q");
      } else {
-       CHECK(std::is_floating_point<T>::value);
+       if (!std::is_floating_point<T>::value) {
+         throw std::runtime_error("Could not infer format string");
+       }
        return "=d";
      }
    default:
-     LOG(FATAL) << "Type not supported";
+     throw std::runtime_error("Unrecognized type");
   }
   return nullptr;
 }
@@ -291,14 +335,20 @@ inline PyBufferFrame GetPyBufferFromScalar(T& scalar) {
 
 template <typename T>
 inline void InitArrayFromPyBuffer(ContiguousArray<T>& vec, PyBufferFrame buffer) {
-  CHECK_EQ(sizeof(T), buffer.itemsize);
+  if (sizeof(T) != buffer.itemsize) {
+    throw std::runtime_error("Incorrect itemsize");
+  }
   vec.UseForeignBuffer(buffer.buf, buffer.nitem);
 }
 
 template <typename T>
 inline void InitScalarFromPyBuffer(T& scalar, PyBufferFrame buffer) {
-  CHECK_EQ(buffer.itemsize, sizeof(T));
-  CHECK_EQ(buffer.nitem, 1);
+  if (sizeof(T) != buffer.itemsize) {
+    throw std::runtime_error("Incorrect itemsize");
+  }
+  if (buffer.nitem != 1) {
+    throw std::runtime_error("nitem must be 1 for a scalar");
+  }
   T* t = static_cast<T*>(buffer.buf);
   scalar = *t;
 }
@@ -322,12 +372,16 @@ Tree::InitFromPyBuffer(std::vector<PyBufferFrame> frames) {
   size_t frame_id = 0;
   InitScalarFromPyBuffer(num_nodes, frames[frame_id++]);
   InitArrayFromPyBuffer(nodes_, frames[frame_id++]);
-  CHECK_EQ(num_nodes, nodes_.Size());
+  if (num_nodes != nodes_.Size()) {
+    throw std::runtime_error("Could not load the correct number of nodes");
+  }
   InitArrayFromPyBuffer(leaf_vector_, frames[frame_id++]);
   InitArrayFromPyBuffer(leaf_vector_offset_, frames[frame_id++]);
   InitArrayFromPyBuffer(left_categories_, frames[frame_id++]);
   InitArrayFromPyBuffer(left_categories_offset_, frames[frame_id++]);
-  CHECK_EQ(frame_id, kNumFramePerTree);
+  if (frame_id != kNumFramePerTree) {
+    throw std::runtime_error("Wrong number of frames loaded");
+  }
 }
 
 inline std::vector<PyBufferFrame>
@@ -358,7 +412,9 @@ Model::InitFromPyBuffer(std::vector<PyBufferFrame> frames) {
   InitScalarFromPyBuffer(param, frames[frame_id++]);
   /* Body */
   const size_t num_frame = frames.size();
-  CHECK_EQ((num_frame - frame_id) % kNumFramePerTree, 0);
+  if ((num_frame - frame_id) % kNumFramePerTree != 0) {
+    throw std::runtime_error("Wrong number of frames");
+  }
   trees.clear();
   for (; frame_id < num_frame; frame_id += kNumFramePerTree) {
     std::vector<PyBufferFrame> tree_frames(frames.begin() + frame_id,
@@ -385,9 +441,9 @@ inline void Tree::Node::Init() {
 inline int
 Tree::AllocNode() {
   int nd = num_nodes++;
-  CHECK_LT(num_nodes, std::numeric_limits<int>::max())
-      << "number of nodes in the tree exceed 2^31";
-  CHECK_EQ(nodes_.Size(), static_cast<size_t>(nd));
+  if (nodes_.Size() != static_cast<size_t>(nd)) {
+    throw std::runtime_error("Invariant violated: nodes_ contains incorrect number of nodes");
+  }
   for (int nid = nd; nid < num_nodes; ++nid) {
     leaf_vector_offset_.PushBack(leaf_vector_offset_.Back());
     left_categories_offset_.PushBack(left_categories_offset_.Back());
@@ -440,8 +496,10 @@ Tree::GetCategoricalFeatures() const {
       if (tmp.count(split_index) == 0) {
         tmp[split_index] = flag;
       } else {
-        CHECK_EQ(tmp[split_index], flag) << "Feature " << split_index
-          << " cannot be simultaneously be categorical and numerical.";
+        if (tmp[split_index] != flag) {
+          throw std::runtime_error("Feature " + std::to_string(split_index) +
+                                   " cannot be simultaneously be categorical and numerical.");
+        }
       }
     }
   }
@@ -492,14 +550,18 @@ Tree::LeafValue(int nid) const {
 
 inline std::vector<tl_float>
 Tree::LeafVector(int nid) const {
-  CHECK_LE(nid, leaf_vector_offset_.Size());
+  if (nid > leaf_vector_offset_.Size()) {
+    throw std::runtime_error("nid too large");
+  }
   return std::vector<tl_float>(&leaf_vector_[leaf_vector_offset_[nid]],
                                &leaf_vector_[leaf_vector_offset_[nid + 1]]);
 }
 
 inline bool
 Tree::HasLeafVector(int nid) const {
-  CHECK_LE(nid, leaf_vector_offset_.Size());
+  if (nid > leaf_vector_offset_.Size()) {
+    throw std::runtime_error("nid too large");
+  }
   return leaf_vector_offset_[nid] != leaf_vector_offset_[nid + 1];
 }
 
@@ -515,7 +577,9 @@ Tree::ComparisonOp(int nid) const {
 
 inline std::vector<uint32_t>
 Tree::LeftCategories(int nid) const {
-  CHECK_LE(nid, left_categories_offset_.Size());
+  if (nid > left_categories_offset_.Size()) {
+    throw std::runtime_error("nid too large");
+  }
   return std::vector<uint32_t>(&left_categories_[left_categories_offset_[nid]],
                                &left_categories_[left_categories_offset_[nid + 1]]);
 }
@@ -564,7 +628,9 @@ inline void
 Tree::SetNumericalSplit(int nid, unsigned split_index, tl_float threshold,
     bool default_left, Operator cmp) {
   Node& node = nodes_[nid];
-  CHECK_LT(split_index, (1U << 31) - 1) << "split_index too big";
+  if (split_index >= ((1U << 31) - 1)) {
+    throw std::runtime_error("split_index too big");
+  }
   if (default_left) split_index |= (1U << 31);
   node.sindex_ = split_index;
   (node.info_).threshold = threshold;
@@ -575,16 +641,24 @@ Tree::SetNumericalSplit(int nid, unsigned split_index, tl_float threshold,
 inline void
 Tree::SetCategoricalSplit(int nid, unsigned split_index, bool default_left,
     bool missing_category_to_zero, const std::vector<uint32_t>& node_left_categories) {
-  CHECK_LT(split_index, (1U << 31) - 1) << "split_index too big";
+  if (split_index >= ((1U << 31) - 1)) {
+    throw std::runtime_error("split_index too big");
+  }
 
   const size_t end_oft = left_categories_offset_.Back();
   const size_t new_end_oft = end_oft + node_left_categories.size();
-  CHECK_EQ(end_oft, left_categories_.Size());
-  CHECK(std::all_of(&left_categories_offset_[nid + 1], left_categories_offset_.End(),
-                    [end_oft](size_t x) { return (x == end_oft); }));
+  if (end_oft != left_categories_.Size()) {
+    throw std::runtime_error("Invariant violated");
+  }
+  if (!std::all_of(&left_categories_offset_[nid + 1], left_categories_offset_.End(),
+                   [end_oft](size_t x) { return (x == end_oft); })) {
+    throw std::runtime_error("Invariant violated");
+  }
     // Hopefully we won't have to move any element as we add node_left_categories for node nid
   left_categories_.Extend(node_left_categories);
-  CHECK_EQ(new_end_oft, left_categories_.Size());
+  if (new_end_oft != left_categories_.Size()) {
+    throw std::runtime_error("Invariant violated");
+  }
   std::for_each(&left_categories_offset_[nid + 1], left_categories_offset_.End(),
                 [new_end_oft](size_t& x) { x = new_end_oft; });
   std::sort(&left_categories_[end_oft], left_categories_.End());
@@ -609,12 +683,18 @@ inline void
 Tree::SetLeafVector(int nid, const std::vector<tl_float>& node_leaf_vector) {
   const size_t end_oft = leaf_vector_offset_.Back();
   const size_t new_end_oft = end_oft + node_leaf_vector.size();
-  CHECK_EQ(end_oft, leaf_vector_.Size());
-  CHECK(std::all_of(&leaf_vector_offset_[nid + 1], leaf_vector_offset_.End(),
-                    [end_oft](size_t x) { return (x == end_oft); }));
+  if (end_oft != leaf_vector_.Size()) {
+    throw std::runtime_error("Invariant violated");
+  }
+  if (!std::all_of(&leaf_vector_offset_[nid + 1], leaf_vector_offset_.End(),
+                   [end_oft](size_t x) { return (x == end_oft); })) {
+    throw std::runtime_error("Invariant violated");
+  }
     // Hopefully we won't have to move any element as we add leaf vector elements for node nid
   leaf_vector_.Extend(node_leaf_vector);
-  CHECK_EQ(new_end_oft, leaf_vector_.Size());
+  if (new_end_oft != leaf_vector_.Size()) {
+    throw std::runtime_error("Invariant violated");
+  }
   std::for_each(&leaf_vector_offset_[nid + 1], leaf_vector_offset_.End(),
                 [new_end_oft](size_t& x) { x = new_end_oft; });
 
@@ -659,15 +739,15 @@ Model::Clone() const {
 }
 
 inline void InitParamAndCheck(ModelParam* param,
-                              const std::vector<std::pair<std::string, std::string>> cfg) {
+                              const std::vector<std::pair<std::string, std::string>>& cfg) {
   auto unknown = param->InitAllowUnknown(cfg);
   if (unknown.size() > 0) {
     std::ostringstream oss;
     for (const auto& kv : unknown) {
       oss << kv.first << ", ";
     }
-    LOG(INFO) << "\033[1;31mWarning: Unknown parameters found; "
-              << "they have been ignored\u001B[0m: " << oss.str();
+    std::cerr << "\033[1;31mWarning: Unknown parameters found; "
+              << "they have been ignored\u001B[0m: " << oss.str() << std::endl;
   }
 }
 

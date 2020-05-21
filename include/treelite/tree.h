@@ -8,10 +8,8 @@
 #define TREELITE_TREE_H_
 
 #include <treelite/base.h>
-#include <dmlc/parameter.h>
-#include <dmlc/logging.h>
-#include <dmlc/io.h>
 #include <algorithm>
+#include <map>
 #include <vector>
 #include <utility>
 #include <type_traits>
@@ -21,6 +19,14 @@
 #define _TREELITE_STR(x) __TREELITE_STR(x)
 
 #define TREELITE_MAX_PRED_TRANSFORM_LENGTH 256
+
+/* Foward declarations */
+namespace dmlc {
+
+class Stream;
+float stof(const std::string& value, size_t* pos);
+
+}  // namespace dmlc
 
 namespace treelite {
 
@@ -332,7 +338,7 @@ class Tree {
   void ReferenceSerialize(dmlc::Stream* fo) const;
 };
 
-struct ModelParam : public dmlc::Parameter<ModelParam> {
+struct ModelParam {
   /*!
   * \defgroup model_param
   * Extra parameters for tree ensemble models
@@ -372,7 +378,7 @@ struct ModelParam : public dmlc::Parameter<ModelParam> {
   float global_bias;
   /*! \} */
 
-  ModelParam() {
+  ModelParam() : sigmoid_alpha(1.0f), global_bias(0.0f) {
     std::memset(pred_transform, 0, TREELITE_MAX_PRED_TRANSFORM_LENGTH * sizeof(char));
     std::strcpy(pred_transform, "identity");
   }
@@ -386,22 +392,11 @@ struct ModelParam : public dmlc::Parameter<ModelParam> {
   template<typename Container>
   inline std::vector<std::pair<std::string, std::string>>
   InitAllowUnknown(const Container &kwargs);
-  template<typename Container>
-  inline void UpdateDict(Container *dict) const;
   inline std::map<std::string, std::string> __DICT__() const;
-
-  // declare parameters
-  DMLC_DECLARE_PARAMETER(ModelParam) {
-    DMLC_DECLARE_FIELD(sigmoid_alpha).set_default(1.0f)
-      .set_lower_bound(0.0f)
-      .describe("scaling parameter for sigmoid function");
-    DMLC_DECLARE_FIELD(global_bias).set_default(0.0f)
-      .describe("global bias of the model");
-  }
 };
 
 inline void InitParamAndCheck(ModelParam* param,
-                              const std::vector<std::pair<std::string, std::string>> cfg);
+                              const std::vector<std::pair<std::string, std::string>>& cfg);
 
 /*! \brief thin wrapper for tree ensemble model */
 struct Model {
@@ -422,9 +417,7 @@ struct Model {
   ModelParam param;
 
   /*! \brief disable copy; use default move */
-  Model() {
-    param.Init(std::vector<std::pair<std::string, std::string>>());
-  }
+  Model() = default;
   ~Model() = default;
   Model(const Model&) = delete;
   Model& operator=(const Model&) = delete;

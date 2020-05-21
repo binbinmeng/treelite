@@ -6,9 +6,8 @@
  */
 
 #include <treelite/tree.h>
-#include <dmlc/serializer.h>
 #include <dmlc/io.h>
-#include <dmlc/timer.h>
+#include <dmlc/serializer.h>
 
 namespace dmlc {
 namespace serializer {
